@@ -112,7 +112,7 @@ class FunctionsTest {
                 requestHandler = {
                     assertEquals("POST", it.method.value)
                     assertEquals("/$expectedName", it.url.pathAfterVersion())
-                    assertEquals(expectedRegion.value, it.headers["x-region"])
+                    assertEquals(listOf(expectedRegion.value), it.headers.getAll("x-region"))
                     assertEquals("myValue", it.headers["myHeader"])
                     respond("")
                 }
@@ -143,7 +143,7 @@ class FunctionsTest {
                     assertEquals(expectedBody, body)
                     assertEquals("POST", it.method.value)
                     assertEquals("/$expectedName", it.url.pathAfterVersion())
-                    assertEquals(expectedRegion.value, it.headers["x-region"])
+                    assertEquals(listOf(expectedRegion.value), it.headers.getAll("x-region"))
                     respond("")
                 }
             )
@@ -169,7 +169,7 @@ class FunctionsTest {
                 requestHandler = {
                     assertEquals("POST", it.method.value)
                     assertEquals("/$expectedName", it.url.pathAfterVersion())
-                    assertEquals(expectedRegion.value, it.headers["x-region"])
+                    assertEquals(listOf(expectedRegion.value), it.headers.getAll("x-region"))
                     respond("streaming content")
                 }
             )
