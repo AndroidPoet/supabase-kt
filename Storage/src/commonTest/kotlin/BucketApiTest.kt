@@ -314,7 +314,7 @@ class BucketApiTest {
                     "/cdn/${specialBucketId.encodeURLPath()}/${expectedPath.encodeURLPath()}",
                     it.url.pathAfterVersion()
                 )
-                assertEquals("true", it.url.parameters["transformations"], "Transformations should be true")
+                assertNull(it.url.parameters["transformations"], "Transformations should not be set")
                 respond("")
             }
             client.storage[specialBucketId].purgeCache(expectedPath)
@@ -322,7 +322,7 @@ class BucketApiTest {
     }
 
     @Test
-    fun testPurgeCacheWithoutTransformations() {
+    fun testPurgeCacheOnlyTransformations() {
         runTest {
             val specialBucketId = "bucket name #1"
             val expectedPath = "data #1.png"
@@ -332,11 +332,11 @@ class BucketApiTest {
                     "/cdn/${specialBucketId.encodeURLPath()}/${expectedPath.encodeURLPath()}",
                     it.url.pathAfterVersion()
                 )
-                assertNull(it.url.parameters["transformations"], "Transformations should not be set")
+                assertEquals("true", it.url.parameters["transformations"], "Transformations should be true")
                 respond("")
             }
             client.storage[specialBucketId].purgeCache(expectedPath) {
-                transformations = false
+                transformations = true
             }
         }
     }

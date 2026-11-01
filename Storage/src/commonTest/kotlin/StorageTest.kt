@@ -121,7 +121,7 @@ class StorageTest {
             client = createMockedSupabaseClient(configuration = configureClient) {
                 assertPathIs("/cdn/${name.encodeURLPath()}", it.url.pathAfterVersion())
                 assertMethodIs(HttpMethod.Delete, it.method)
-                assertEquals("true", it.url.parameters["transformations"], "Transformations should be true")
+                assertNull(it.url.parameters["transformations"], "Transformations should not be set")
                 respond("")
             }
             client.storage.purgeBucketCache(name)
@@ -129,17 +129,17 @@ class StorageTest {
     }
 
     @Test
-    fun testPurgeBucketCacheWithoutTransformations() {
+    fun testPurgeBucketCacheOnlyTransformations() {
         runTest {
             val name = "bucket name #1"
             client = createMockedSupabaseClient(configuration = configureClient) {
                 assertPathIs("/cdn/${name.encodeURLPath()}", it.url.pathAfterVersion())
                 assertMethodIs(HttpMethod.Delete, it.method)
-                assertNull(it.url.parameters["transformations"], "Transformations should not be set")
+                assertEquals("true", it.url.parameters["transformations"], "Transformations should be true")
                 respond("")
             }
             client.storage.purgeBucketCache(name) {
-                transformations = false
+                transformations = true
             }
         }
     }
