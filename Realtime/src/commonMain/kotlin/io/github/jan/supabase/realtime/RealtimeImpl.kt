@@ -290,7 +290,7 @@ import kotlin.time.Duration
     }
 
     override suspend fun removeChannel(channel: RealtimeChannel) {
-        if(channel.status.value == RealtimeChannel.Status.SUBSCRIBED) {
+        if(channel.status.value in JOINED_OR_JOINING) {
             channel.unsubscribe()
         }
         _subscriptions.remove(channel.topic)
@@ -323,7 +323,7 @@ import kotlin.time.Duration
 
     override suspend fun removeAllChannels() {
         _subscriptions.forEach { (_, it) ->
-            if(it.status.value == RealtimeChannel.Status.SUBSCRIBED) {
+            if(it.status.value in JOINED_OR_JOINING) {
                 it.unsubscribe()
             }
         }
@@ -413,6 +413,7 @@ import kotlin.time.Duration
         const val HEARTBEAT_TOPIC = "phoenix"
         // Not 0: refs start at 0, so a socket's first heartbeat can have ref 0
         const val NO_HEARTBEAT = -1
+        val JOINED_OR_JOINING = setOf(RealtimeChannel.Status.SUBSCRIBED, RealtimeChannel.Status.SUBSCRIBING)
     }
 
 }
