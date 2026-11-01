@@ -159,6 +159,22 @@ class BucketApiTest {
     }
 
     @Test
+    fun testUploadToSignedUrlWithoutIdInResponse() {
+        runTest {
+            client = createMockedSupabaseClient(configuration = configureClient) {
+                respond(
+                    content = """{ "Key": "$bucketId/data.png" }""",
+                    headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+                )
+            }
+            val response = client.storage[bucketId].uploadToSignedUrl(path = "data.png", token = "12345", data = byteArrayOf(1, 2, 3))
+            assertEquals("$bucketId/data.png", response.key)
+            assertNull(response.id)
+            assertEquals("data.png", response.path)
+        }
+    }
+
+    @Test
     fun testUploadToSignedUrlUpsert() {
         val expectedToken = "12345"
         testUploadMethod(
