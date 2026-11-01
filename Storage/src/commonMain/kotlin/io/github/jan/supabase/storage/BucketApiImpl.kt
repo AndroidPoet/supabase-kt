@@ -265,10 +265,11 @@ internal class BucketApiImpl(
                if(!transformation.isEmpty()) transform(options.transform)
                cacheNonce = options.cacheNonce
             }
-            false -> if (transformation.isEmpty()) authenticatedUrl(path) else authenticatedRenderUrl(
-                path,
-                options.transform
-            )
+            false -> buildUrl(
+                if (transformation.isEmpty()) authenticatedUrl(path) else authenticatedRenderUrl(path, options.transform)
+            ) {
+                options.cacheNonce?.let { parameters.append("cacheNonce", it) }
+            }
         }
         method = HttpMethod.Get
         url(url)
