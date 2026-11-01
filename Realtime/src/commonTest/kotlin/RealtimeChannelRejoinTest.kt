@@ -105,6 +105,27 @@ class RealtimeChannelRejoinTest {
         awaitSent(socket, RealtimeChannel.CHANNEL_EVENT_JOIN)
     }
 
+    @Test
+    fun testReconnectRejoinsOnlySubscribedChannels() = runRejoinTest({ reconnectDelay = 10.milliseconds }) { client, sockets ->
+        val channel = client.channel(channelId)
+        client.channel("other")
+        val (socket, _) = subscribe(channel, sockets)
+        socket.lose()
+        val newSocket = awaitReconnect(sockets)
+        assertEquals(topic, awaitSent(newSocket, RealtimeChannel.CHANNEL_EVENT_JOIN).topic)
+        assertNothingSent(newSocket)
+    }
+
+    @Test
+    fun testReconnectDoesNotRejoinAChannelBeingUnsubscribed() = runRejoinTest({ reconnectDelay = 10.milliseconds }) { client, sockets ->
+        val channel = client.channel(channelId)
+        val (socket, _) = subscribe(channel, sockets)
+        channel.unsubscribe()
+        awaitSent(socket, RealtimeChannel.CHANNEL_EVENT_LEAVE)
+        socket.lose()
+        assertNothingSent(awaitReconnect(sockets))
+    }
+
     private fun runRejoinTest(
         config: Realtime.Config.() -> Unit = {},
         test: suspend TestScope.(SupabaseClient, ScriptedWebsocketFactory) -> Unit,
@@ -139,6 +160,11 @@ class RealtimeChannelRejoinTest {
         val message = socket.sent.awaitItem()
         assertEquals(event, message.event)
         return message
+    }
+
+    private suspend fun awaitReconnect(sockets: ScriptedWebsocketFactory): ScriptedWebsocket = withContext(Dispatchers.Default) {
+        while(sockets.created.size < 2) delay(10.milliseconds)
+        sockets.created.last()
     }
 
     // The library runs on its own dispatcher here, so give it real time to send something

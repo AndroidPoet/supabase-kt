@@ -164,6 +164,7 @@ import kotlin.time.Duration
             if (auth != null && !config.customAccessTokenProvider) auth.sessionStatus.first { it !is SessionStatus.Initializing }
             setAuth()
             for (channel in _subscriptions.values) {
+                if ((channel as? RealtimeChannelImpl)?.joinRequested?.load() == false) continue
                 channel.subscribe()
             }
         }
