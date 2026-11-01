@@ -1,3 +1,4 @@
+import app.cash.turbine.test
 import io.github.jan.supabase.storage.Storage
 import io.github.jan.supabase.storage.UploadStatus
 import io.github.jan.supabase.storage.resumable.MemoryResumableCache
@@ -12,7 +13,6 @@ import io.ktor.http.headersOf
 import io.ktor.utils.io.ByteReadChannel
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
@@ -113,8 +113,10 @@ class ResumableUploadTest {
                 upsert = true
             }
             upload.startOrResumeUploading()
-            withContext(Dispatchers.Default) {
-                withTimeout(10.seconds) { upload.stateFlow.first { it.status is UploadStatus.Success } }
+            upload.stateFlow.test {
+                do {
+                    val state = awaitItem()
+                } while (state.status !is UploadStatus.Success)
             }
             assertEquals(listOf<String?>("true", "true"), upsertHeaders)
         }
