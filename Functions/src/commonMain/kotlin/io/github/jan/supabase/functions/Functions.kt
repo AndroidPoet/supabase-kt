@@ -85,7 +85,7 @@ class Functions(override val config: Config, override val supabaseClient: Supaba
     suspend inline operator fun invoke(function: String, region: FunctionRegion = config.defaultRegion, crossinline builder: HttpRequestBuilder.() -> Unit): HttpResponse {
         return api.post(function) {
             builder()
-            if (!headers.contains(X_REGION_HEADER)) header(X_REGION_HEADER, region.value)
+            setRegionHeader(region)
         }
     }
 
@@ -150,7 +150,7 @@ class Functions(override val config: Config, override val supabaseClient: Supaba
                 method = HttpMethod.Post
                 headers.appendAll(defaultHeaders)
                 builder()
-                if (!headers.contains(X_REGION_HEADER)) header(X_REGION_HEADER, region.value)
+                setRegionHeader(region)
             }
         ) {
             incoming.collect { event ->
@@ -175,7 +175,7 @@ class Functions(override val config: Config, override val supabaseClient: Supaba
         return api.prepareRequest(function) {
             method = HttpMethod.Post
             builder()
-            if (!headers.contains(X_REGION_HEADER)) header(X_REGION_HEADER, region.value)
+            setRegionHeader(region)
         }
     }
 
@@ -198,6 +198,12 @@ class Functions(override val config: Config, override val supabaseClient: Supaba
         },
         supabaseClient = supabaseClient
     )
+
+    @PublishedApi
+    internal fun HttpRequestBuilder.setRegionHeader(region: FunctionRegion) {
+        if (!headers.contains(X_REGION_HEADER)) header(X_REGION_HEADER, region.value)
+        if (headers[X_REGION_HEADER] == FunctionRegion.ANY.value) headers.remove(X_REGION_HEADER)
+    }
 
     override suspend fun parseErrorResponse(response: HttpResponse): RestException {
         val error = response.bodyAsText()

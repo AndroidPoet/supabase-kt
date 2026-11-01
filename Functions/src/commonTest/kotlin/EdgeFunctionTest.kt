@@ -1,5 +1,6 @@
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.functions.FunctionRegion
+import io.github.jan.supabase.functions.Functions
 import io.github.jan.supabase.functions.functions
 import io.github.jan.supabase.testing.createMockedSupabaseClient
 import io.github.jan.supabase.testing.pathAfterVersion
@@ -16,6 +17,7 @@ import kotlinx.serialization.json.put
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class EdgeFunctionTest {
 
@@ -93,6 +95,25 @@ class EdgeFunctionTest {
             statement.execute { response ->
                 assertEquals("streaming content", response.bodyAsText())
             }
+        }
+    }
+
+    @Test
+    fun testInvokingWithAnyRegionSendsNoRegionHeader() {
+        runTest {
+            supabase = createMockedSupabaseClient(
+                configuration = {
+                    install(Functions) {
+                        defaultRegion = FunctionRegion.EU_WEST_1
+                    }
+                },
+                requestHandler = {
+                    assertNull(it.headers["x-region"])
+                    respond("")
+                }
+            )
+            val function = supabase.functions.buildEdgeFunction("myFunction", FunctionRegion.ANY)
+            function()
         }
     }
 

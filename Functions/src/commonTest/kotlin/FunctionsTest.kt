@@ -183,6 +183,22 @@ class FunctionsTest {
         }
     }
 
+    @Test
+    fun testInvokingWithAnyRegionSendsNoRegionHeader() {
+        runTest {
+            supabase = createMockedSupabaseClient(
+                configuration = configuration,
+                requestHandler = {
+                    assertNull(it.headers["x-region"])
+                    respond("")
+                }
+            )
+            supabase.functions.invoke("myFunction")
+            supabase.functions.invoke("myFunction", region = FunctionRegion.ANY)
+            supabase.functions.prepareInvoke("myFunction").execute()
+        }
+    }
+
     @AfterTest
     fun cleanup() {
         runTest {
