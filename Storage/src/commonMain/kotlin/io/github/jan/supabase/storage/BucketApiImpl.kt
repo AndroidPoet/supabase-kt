@@ -314,7 +314,6 @@ internal class BucketApiImpl(
         val key = response["Key"]?.jsonPrimitive?.content
             ?: error("Expected a key in a upload response")
         val id = response["Id"]?.jsonPrimitive?.content
-            ?: error("Expected an id in a upload response")
         return FileUploadResponse(id, path, key)
     }
 
