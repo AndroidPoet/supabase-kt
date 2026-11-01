@@ -29,6 +29,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -623,6 +624,36 @@ class PostgrestTest {
             supabase.postgrest.rpc("function", mockData) {
                 schema = "schema"
                 method = RpcMethod.HEAD
+            }
+        }
+    }
+
+    @Test
+    fun testRpcParametersWithGetMethod() {
+        val parameters = buildJsonObject {
+            put("name", "Alice")
+            put("age", 3)
+            put("active", true)
+            put("cities", JsonArray(listOf(JsonPrimitive("Paris, France"), JsonPrimitive("Oslo"), JsonPrimitive("a\"b"))))
+            put("ids", JsonArray(listOf(JsonPrimitive(1), JsonPrimitive(2))))
+            put("meta", buildJsonObject { put("a", 1) })
+        }
+        supabase = createMockedSupabaseClient(
+            configuration = configureClient
+        ) {
+            assertPathIs("/rpc/function", it.url.pathAfterVersion())
+            assertMethodIs(HttpMethod.Get, it.method)
+            assertEquals("Alice", it.url.parameters["name"])
+            assertEquals("3", it.url.parameters["age"])
+            assertEquals("true", it.url.parameters["active"])
+            assertEquals("{\"Paris, France\",\"Oslo\",\"a\\\"b\"}", it.url.parameters["cities"])
+            assertEquals("{1,2}", it.url.parameters["ids"])
+            assertEquals("{\"a\":1}", it.url.parameters["meta"])
+            respond("")
+        }
+        runTest {
+            supabase.postgrest.rpc("function", parameters) {
+                method = RpcMethod.GET
             }
         }
     }
