@@ -538,9 +538,10 @@ class BucketApiTest {
             client = createMockedSupabaseClient(configuration = configureClient) {
                 assertMethodIs(HttpMethod.Get, it.method)
                 assertPathIs("/object/authenticated/$bucketId/$expectedPath", it.url.pathAfterVersion())
+                assertEquals("1234", it.url.parameters["cacheNonce"])
                 respond(expectedData)
             }
-            val data = client.storage[bucketId].downloadAuthenticated(expectedPath)
+            val data = client.storage[bucketId].downloadAuthenticated(expectedPath) { cacheNonce = "1234" }
             assertContentEquals(expectedData, data, "Data should be [1, 2, 3]")
         }
     }
@@ -729,9 +730,7 @@ class BucketApiTest {
                 assertEquals(expectedQuality.toString(), content["quality"], "Quality should be $expectedQuality")
                 assertEquals(expectedResize.name.lowercase(), content["resize"], "Resize should be ${expectedResize.name.lowercase()}")
                 assertEquals(expectedFormat, content["format"], "Format should be $expectedFormat")
-                if(!authenticated) {
-                    assertEquals("1234", it.url.parameters["cacheNonce"])
-                }
+                assertEquals("1234", it.url.parameters["cacheNonce"])
                 respond(expectedData)
             }
             val transform: ImageTransformation.() -> Unit = {
@@ -741,7 +740,7 @@ class BucketApiTest {
                 resize = expectedResize
             }
             val data = if(authenticated) {
-                client.storage[bucketId].downloadAuthenticated(expectedPath) { transform(transform) }
+                client.storage[bucketId].downloadAuthenticated(expectedPath) { transform(transform); cacheNonce = "1234" }
             } else {
                 client.storage[bucketId].downloadPublic(expectedPath) { transform(transform); cacheNonce = "1234" }
             }
