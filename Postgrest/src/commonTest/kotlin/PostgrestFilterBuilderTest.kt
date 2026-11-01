@@ -63,6 +63,14 @@ class PostgrestFilterBuilderTest {
     }
 
     @Test
+    fun in_quotesValuesWithQuotesOrBackslashes() {
+        val filter = filterToString {
+            isIn("message", listOf("say \"hi\"", "a\\b"))
+        }
+        assertEquals("message=in.(\"say+\\\"hi\\\"\",\"a\\\\b\")", filter)
+    }
+
+    @Test
     fun neq() {
         val filter = filterToString {
             neq("id", 1)
