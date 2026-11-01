@@ -391,8 +391,8 @@ class BucketApiTest {
                 assertEquals(expectedQuality, transform?.get("quality")?.jsonPrimitive?.int, "Quality should be $expectedQuality")
                 assertEquals(expectedResize.name.lowercase(), transform?.get("resize")?.jsonPrimitive?.content, "Resize should be ${expectedResize.name.lowercase()}")
                 assertEquals(expectedFormat, transform?.get("format")?.jsonPrimitive?.content, "Format should be $expectedFormat")
-                assertEquals("myFile.png", it.url.parameters["download"])
-                assertEquals("1234", it.url.parameters["cacheNonce"])
+                assertNull(it.url.parameters["download"])
+                assertNull(it.url.parameters["cacheNonce"])
                 respond(
                     content = """
                     { 
@@ -415,7 +415,7 @@ class BucketApiTest {
                 forceDownload("myFile.png")
                 cacheNonce = "1234"
             }
-            assertEquals(client.storage.resolveUrl(expectedUrl.substring(1)), url, "URL should be $expectedUrl")
+            assertEquals(client.storage.resolveUrl(expectedUrl.substring(1)) + "&cacheNonce=1234&download=myFile.png", url)
         }
     }
 
@@ -474,8 +474,8 @@ class BucketApiTest {
                     content["expiresIn"]?.jsonPrimitive?.long?.seconds,
                     "Expires in should be $expectedExpiresIn"
                 )
-                assertEquals("1234", it.url.parameters["cacheNonce"])
-                assertEquals("myFile.png", it.url.parameters["download"])
+                assertNull(it.url.parameters["cacheNonce"])
+                assertNull(it.url.parameters["download"])
                 respond(
                     content = """
                     [
@@ -494,7 +494,7 @@ class BucketApiTest {
                 forceDownload("myFile.png")
                 cacheNonce = "1234"
             }
-            assertEquals(expectedUrls.map { client.storage.resolveUrl(it.substring(1)) }, urls.map { it.signedURL }, "URLs should be $expectedUrls")
+            assertEquals(expectedUrls.map { client.storage.resolveUrl(it.substring(1)) + "&cacheNonce=1234&download=myFile.png" }, urls.map { it.signedURL })
         }
     }
 
